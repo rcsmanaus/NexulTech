@@ -1,5 +1,5 @@
 // ============================================================
-//  SoroCare Monitor v2.2.1
+//  SoroCare Monitor v2.2.2
 //  - Botão físico (GPIO26) para confirmar presença no leito
 //    e silenciar alarme de soro vazio
 //  - Fator de calibração E offset do tare salvos na NVS
@@ -82,7 +82,7 @@ struct Config {
   float volumeTotal      = 500.0f;
   float taxaGotas        = 60.0f;
   char  logoUrl[128]     = "";
-  char  nomeEmpresa[64]  = "SoroCare";
+  char  nomeEmpresa[64]  = "NexulTech";
   char  adminUser[32]    = ADMIN_USER_DEFAULT;
   char  adminPass[32]    = ADMIN_PASS_DEFAULT;
 } cfg;
@@ -174,7 +174,7 @@ void IRAM_ATTR isrGota() {
 void setup() {
   Serial.begin(115200);
   delay(400);
-  Serial.println("\n=== SoroCare Monitor v" FW_VERSION " ===");
+  Serial.println("\n=== NexulTech Monitor v" FW_VERSION " ===");
 
   pinMode(LED_STATUS,    OUTPUT);
   pinMode(BUZZER_PIN,    OUTPUT);
@@ -523,9 +523,9 @@ bool conectarWiFi() {
 
 void iniciarModoAP() {
   modoAP = true;
-  String apName = "SoroCare_" + deviceId.substring(deviceId.length()-4);
+  String apName = "NexulTech_" + deviceId.substring(deviceId.length()-4);
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName.c_str(), "sorocare123");
+  WiFi.softAP(apName.c_str(), "nexultech");
   IPAddress apIP(192,168,4,1);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255,255,255,0));
   dns.start(53, "*", apIP);
@@ -1295,7 +1295,7 @@ void carregarConfig() {
     cfg.pesoVazio           = prefs.getFloat ("pesoVazio",    PESO_VAZIO_DEFAULT);
     cfg.pesoAlerta          = prefs.getFloat ("pesoAlerta",   PESO_ALERTA_DEFAULT);
     cfg.fatorCalibracao     = prefs.getFloat ("fatorCal",     -420.0f);
-    strlcpy(cfg.nomeEmpresa, prefs.getString("nomeEmpresa",  "SoroCare").c_str(),       64);
+    strlcpy(cfg.nomeEmpresa, prefs.getString("nomeEmpresa",  "NexulTech").c_str(),       64);
     strlcpy(cfg.logoUrl,     prefs.getString("logoUrl",      "").c_str(),               128);
     strlcpy(cfg.adminUser,   prefs.getString("adminUser",    ADMIN_USER_DEFAULT).c_str(), 32);
     strlcpy(cfg.adminPass,   prefs.getString("adminPass",    ADMIN_PASS_DEFAULT).c_str(), 32);
