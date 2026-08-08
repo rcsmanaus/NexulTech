@@ -1,0 +1,464 @@
+/*
+  ============================================================================
+  Controle de Leito + Reles + Monitor de Bateria - ESP32
+  ============================================================================
+
+  FUNCIONALIDADES:
+  - 2 botoes fisicos que enviam mensagem via MQTT (mensagem editavel pela web)
+  - Pagina web local de configuracao (SSID, senha, IP/porta MQTT, mensagens)
+  - Controle de 2 reles pela pagina web local
+  - Monitor de bateria via ADC, com alerta MQTT quando a carga atingir 80%+
+  - Configuracoes salvas na memoria NVS (sobrevivem a reinicio/queda de energia)
+  - Se nao houver WiFi configurado ou a conexao falhar, o dispositivo sobe um
+    Access Point proprio (SSID "NexulTech", senha "12345678") para voce
+    acessar a pagina de configuracao em 192.168.4.1
+
+  BIBLIOTECAS NECESSARIAS (Arduino IDE > Gerenciador de Bibliotecas):
+  - PubSubClient (Nick O'Leary)
+  - WiFi, WebServer, Preferences  -> ja vem no pacote da placa ESP32
+
+  PINAGEM (ajuste conforme sua montagem):
+  - Botao 1 ......... GPIO 32  (para GND, usa pull-up interno)
+  - Botao 2 ......... GPIO 33  (para GND, usa pull-up interno)
+  - Rele 1 .......... GPIO 25
+  - Rele 2 .......... GPIO 26
+  - Leitura bateria . GPIO 35  (ADC, entrada de um divisor resistivo)
+  - LED status ...... GPIO 2   (acende fixo quando conectado ao WiFi)
+  ============================================================================
+*/
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include <PubSubClient.h>
+#include <Preferences.h>
+
+// ---------------- PINOS ----------------
+#define BUTTON1_PIN     32
+#define BUTTON2_PIN     33
+#define RELAY1_PIN      25
+#define RELAY2_PIN      26
+#define BATTERY_ADC_PIN 35
+#define LED_STATUS_PIN  2
+
+// ---------------- CALIBRACAO DE BATERIA ----------------
+// Ajuste esses valores conforme a bateria e o divisor resistivo usados.
+#define BATTERY_MIN_V         3.0    // tensao considerada 0%
+#define BATTERY_MAX_V         4.2    // tensao considerada 100%
+#define ADC_REF_V             3.3
+#define ADC_RESOLUTION        4095.0
+#define VOLTAGE_DIVIDER_RATIO 2.0    // ex: dois resistores iguais = divide por 2
+
+// Limite de alerta de bateria "carregada" (conforme solicitado: 80% em diante)
+#define BATTERY_ALERT_HIGH    80.0
+#define BATTERY_ALERT_RESET   75.0   // histerese p/ nao repetir o alerta o tempo todo
+
+// ---------------- OBJETOS GLOBAIS ----------------
+Preferences prefs;
+WebServer server(80);
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+
+// ---------------- CONFIGURACOES (carregadas da NVS) ----------------
+String cfgSSID;
+String cfgPASS;
+String cfgMqttServer;
+int    cfgMqttPort;
+String cfgMqttUser;
+String cfgMqttPass;
+String cfgBaseTopic;
+String cfgMsgButton1;
+String cfgMsgButton2;
+
+// ---------------- ESTADOS ----------------
+bool relay1State = false;
+bool relay2State = false;
+bool apMode = false;
+
+unsigned long lastBtn1Press = 0;
+unsigned long lastBtn2Press = 0;
+const unsigned long DEBOUNCE_MS = 400;
+
+unsigned long lastBatteryCheck = 0;
+const unsigned long BATTERY_CHECK_INTERVAL = 60000; // le bateria a cada 1 min
+bool battery80Sent = false;
+float lastBatteryPercent = 0;
+float lastBatteryVoltage = 0;
+
+unsigned long lastMqttAttempt = 0;
+const unsigned long MQTT_RETRY_INTERVAL = 5000;
+
+// ---------------- VALORES PADRAO (1a vez que liga) ----------------
+const char* DEFAULT_MQTT_SERVER = "179.125.32.238";
+const int   DEFAULT_MQTT_PORT   = 2883;
+const char* DEFAULT_BASE_TOPIC  = "hospital/leito01";
+const char* DEFAULT_MSG_B1      = "Entrar - Botao 1 acionado";
+const char* DEFAULT_MSG_B2      = "Sair - Botao 2 acionado";
+const char* AP_SSID = "NexulTech";
+const char* AP_PASS = "12345678";
+
+// =====================================================================
+// PROTOTIPOS
+// =====================================================================
+void loadConfig();
+void saveConfig();
+void connectWiFi();
+void startAPMode();
+void setupWebServer();
+void handleRoot();
+void handleSave();
+void handleRelay();
+void handleStatus();
+void mqttReconnect();
+void publishMessage(const String &topic, const String &payload);
+void checkButtons();
+void checkBattery();
+float readBatteryVoltage();
+float voltageToPercent(float v);
+String htmlEscape(const String &in);
+
+// =====================================================================
+void setup() {
+  Serial.begin(115200);
+  delay(200);
+
+  pinMode(BUTTON1_PIN, INPUT_PULLUP);
+  pinMode(BUTTON2_PIN, INPUT_PULLUP);
+  pinMode(RELAY1_PIN, OUTPUT);
+  pinMode(RELAY2_PIN, OUTPUT);
+  pinMode(LED_STATUS_PIN, OUTPUT);
+  digitalWrite(RELAY1_PIN, LOW);
+  digitalWrite(RELAY2_PIN, LOW);
+
+  analogReadResolution(12); // 0-4095
+
+  loadConfig();
+  connectWiFi();
+  setupWebServer();
+
+  mqttClient.setServer(cfgMqttServer.c_str(), cfgMqttPort);
+  mqttClient.setBufferSize(640);
+
+  Serial.println("Sistema Nexultech Leito.");
+}
+
+void loop() {
+  server.handleClient();
+
+  if (!apMode) {
+    if (WiFi.status() != WL_CONNECTED) {
+      digitalWrite(LED_STATUS_PIN, LOW);
+      connectWiFi();
+    } else {
+      digitalWrite(LED_STATUS_PIN, HIGH);
+      if (!mqttClient.connected()) {
+        mqttReconnect();
+      }
+      mqttClient.loop();
+    }
+  }
+
+  checkButtons();
+  checkBattery();
+}
+
+// =====================================================================
+// CONFIG - NVS (memoria nao volatil)
+// =====================================================================
+void loadConfig() {
+  prefs.begin("config", false);
+  cfgSSID       = prefs.getString("ssid", "");
+  cfgPASS       = prefs.getString("pass", "");
+  cfgMqttServer = prefs.getString("mqttsrv", DEFAULT_MQTT_SERVER);
+  cfgMqttPort   = prefs.getInt("mqttport", DEFAULT_MQTT_PORT);
+  cfgMqttUser   = prefs.getString("mqttuser", "");
+  cfgMqttPass   = prefs.getString("mqttpass", "");
+  cfgBaseTopic  = prefs.getString("basetopic", DEFAULT_BASE_TOPIC);
+  cfgMsgButton1 = prefs.getString("msg1", DEFAULT_MSG_B1);
+  cfgMsgButton2 = prefs.getString("msg2", DEFAULT_MSG_B2);
+  prefs.end();
+}
+
+void saveConfig() {
+  prefs.begin("config", false);
+  prefs.putString("ssid", cfgSSID);
+  prefs.putString("pass", cfgPASS);
+  prefs.putString("mqttsrv", cfgMqttServer);
+  prefs.putInt("mqttport", cfgMqttPort);
+  prefs.putString("mqttuser", cfgMqttUser);
+  prefs.putString("mqttpass", cfgMqttPass);
+  prefs.putString("basetopic", cfgBaseTopic);
+  prefs.putString("msg1", cfgMsgButton1);
+  prefs.putString("msg2", cfgMsgButton2);
+  prefs.end();
+}
+
+// =====================================================================
+// WIFI
+// =====================================================================
+void connectWiFi() {
+  if (cfgSSID.length() == 0) {
+    startAPMode();
+    return;
+  }
+
+  Serial.printf("Conectando ao WiFi: %s\n", cfgSSID.c_str());
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(cfgSSID.c_str(), cfgPASS.c_str());
+
+  unsigned long start = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 15000) {
+    delay(300);
+    Serial.print(".");
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    apMode = false;
+    Serial.println();
+    Serial.print("WiFi conectado. IP: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\nFalha ao conectar. Iniciando modo AP de configuracao.");
+    startAPMode();
+  }
+}
+
+void startAPMode() {
+  apMode = true;
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(AP_SSID, AP_PASS);
+  Serial.print("Modo AP ativo. Conecte-se a rede '");
+  Serial.print(AP_SSID);
+  Serial.print("' e acesse: ");
+  Serial.println(WiFi.softAPIP());
+}
+
+// =====================================================================
+// MQTT
+// =====================================================================
+void mqttReconnect() {
+  if (millis() - lastMqttAttempt < MQTT_RETRY_INTERVAL) return;
+  lastMqttAttempt = millis();
+
+  mqttClient.setServer(cfgMqttServer.c_str(), cfgMqttPort);
+
+  String clientId = "ESP32-NexulTech-" + String((uint32_t)ESP.getEfuseMac(), HEX);
+
+  bool ok;
+  if (cfgMqttUser.length() > 0) {
+    ok = mqttClient.connect(clientId.c_str(), cfgMqttUser.c_str(), cfgMqttPass.c_str());
+  } else {
+    ok = mqttClient.connect(clientId.c_str());
+  }
+
+  if (ok) {
+    Serial.println("MQTT conectado.");
+  } else {
+    Serial.printf("Falha MQTT, rc=%d (tentando de novo em %lus)\n",
+                   mqttClient.state(), MQTT_RETRY_INTERVAL / 1000);
+  }
+}
+
+void publishMessage(const String &topic, const String &payload) {
+  if (apMode) return; // sem STA nao ha rota ate o broker
+  if (!mqttClient.connected()) {
+    mqttReconnect();
+  }
+  if (mqttClient.connected()) {
+    bool sent = mqttClient.publish(topic.c_str(), payload.c_str());
+    Serial.printf("MQTT [%s]: %s -> %s\n", topic.c_str(), payload.c_str(),
+                  sent ? "OK" : "FALHOU");
+  } else {
+    Serial.println("MQTT indisponivel, mensagem nao enviada.");
+  }
+}
+
+// =====================================================================
+// BOTOES NexulTech
+// =====================================================================
+void checkButtons() {
+  unsigned long now = millis();
+
+  if (digitalRead(BUTTON1_PIN) == LOW && (now - lastBtn1Press > DEBOUNCE_MS)) {
+    lastBtn1Press = now;
+    Serial.println("Botao 1 pressionado.");
+    publishMessage(cfgBaseTopic + "/botao1", cfgMsgButton1);
+  }
+
+  if (digitalRead(BUTTON2_PIN) == LOW && (now - lastBtn2Press > DEBOUNCE_MS)) {
+    lastBtn2Press = now;
+    Serial.println("Botao 2 pressionado.");
+    publishMessage(cfgBaseTopic + "/botao2", cfgMsgButton2);
+  }
+}
+
+// =====================================================================
+// BATERIA
+// =====================================================================
+float readBatteryVoltage() {
+  int raw = analogRead(BATTERY_ADC_PIN);
+  float vAdc = (raw / ADC_RESOLUTION) * ADC_REF_V;
+  float vBat = vAdc * VOLTAGE_DIVIDER_RATIO;
+  return vBat;
+}
+
+float voltageToPercent(float v) {
+  float pct = (v - BATTERY_MIN_V) / (BATTERY_MAX_V - BATTERY_MIN_V) * 100.0;
+  if (pct > 100) pct = 100;
+  if (pct < 0) pct = 0;
+  return pct;
+}
+
+void checkBattery() {
+  unsigned long now = millis();
+  if (now - lastBatteryCheck < BATTERY_CHECK_INTERVAL) return;
+  lastBatteryCheck = now;
+
+  lastBatteryVoltage = readBatteryVoltage();
+  lastBatteryPercent = voltageToPercent(lastBatteryVoltage);
+
+  Serial.printf("Bateria: %.2fV (%.1f%%)\n", lastBatteryVoltage, lastBatteryPercent);
+
+  // Telemetria periodica da bateria
+  String payload = "{\"voltage\":" + String(lastBatteryVoltage, 2) +
+                    ",\"percent\":" + String(lastBatteryPercent, 1) + "}";
+  publishMessage(cfgBaseTopic + "/bateria", payload);
+
+  // Alerta quando a carga chega em 80% ou mais (envia 1x por ciclo de carga,
+  // so libera novo alerta depois de cair abaixo de 75%)
+  if (lastBatteryPercent >= BATTERY_ALERT_HIGH && !battery80Sent) {
+    battery80Sent = true;
+    publishMessage(cfgBaseTopic + "/bateria/alerta",
+                    "Bateria com 80% ou mais de carga");
+  } else if (lastBatteryPercent < BATTERY_ALERT_RESET) {
+    battery80Sent = false;
+  }
+}
+
+// =====================================================================
+// WEB SERVER - PAGINA LOCAL DE CONFIGURACAO
+// =====================================================================
+void setupWebServer() {
+  server.on("/", handleRoot);
+  server.on("/save", HTTP_POST, handleSave);
+  server.on("/relay", handleRelay);
+  server.on("/status", handleStatus);
+  server.begin();
+}
+
+String htmlEscape(const String &in) {
+  String out = in;
+  out.replace("&", "&amp;");
+  out.replace("\"", "&quot;");
+  out.replace("<", "&lt;");
+  out.replace(">", "&gt;");
+  return out;
+}
+
+void handleRoot() {
+  String ip = apMode ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
+  String mqttStatus = mqttClient.connected() ? "Conectado" : "Desconectado";
+
+  String html = "<!DOCTYPE html><html lang='pt-br'><head><meta charset='UTF-8'>";
+  html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+  html += "<title>Configuracao NexulTech</title><style>";
+  html += "body{font-family:Arial,sans-serif;background:#f4f6f8;margin:0;padding:20px;color:#222}";
+  html += ".card{background:#fff;border-radius:8px;padding:20px;max-width:480px;margin:0 auto 16px;box-shadow:0 2px 6px rgba(0,0,0,.1)}";
+  html += "h2{margin-top:0;color:#0a5c8a}label{display:block;margin-top:10px;font-weight:bold;font-size:14px}";
+  html += "input[type=text],input[type=password],input[type=number]{width:100%;padding:8px;margin-top:4px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box}";
+  html += "button{margin-top:16px;padding:10px 16px;background:#0a5c8a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:15px}";
+  html += "button:hover{background:#084a70}";
+  html += ".relaybtn{background:#2a9d8f;margin-right:8px;margin-top:0}";
+  html += ".status{font-size:13px;color:#555;margin-bottom:8px}";
+  html += ".badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;color:#fff}";
+  html += ".ok{background:#2a9d8f}.bad{background:#e76f51}";
+  html += "</style></head><body>";
+
+  html += "<div class='card'><h2>Status</h2>";
+  html += "<div class='status'>IP do dispositivo: " + ip + "</div>";
+  html += "<div class='status'>WiFi: <span class='badge " + String(apMode ? "bad" : "ok") +
+          "'>" + String(apMode ? "Modo AP (configuracao)" : "Conectado") + "</span></div>";
+  html += "<div class='status'>MQTT: <span class='badge " + String(mqttClient.connected() ? "ok" : "bad") +
+          "'>" + mqttStatus + "</span></div>";
+  html += "<div class='status'>Bateria: " + String(lastBatteryPercent, 1) + "% (" +
+          String(lastBatteryVoltage, 2) + "V)</div>";
+  html += "</div>";
+
+  html += "<div class='card'><h2>Reles</h2>";
+  html += "<a href='/relay?r=1&s=" + String(relay1State ? 0 : 1) + "'><button class='relaybtn'>Rele 1: " +
+          String(relay1State ? "ON (clique p/ desligar)" : "OFF (clique p/ ligar)") + "</button></a><br><br>";
+  html += "<a href='/relay?r=2&s=" + String(relay2State ? 0 : 1) + "'><button class='relaybtn'>Rele 2: " +
+          String(relay2State ? "ON (clique p/ desligar)" : "OFF (clique p/ ligar)") + "</button></a>";
+  html += "</div>";
+
+  html += "<div class='card'><h2>Configuracao</h2><form action='/save' method='POST'>";
+  html += "<label>SSID WiFi</label><input type='text' name='ssid' value='" + htmlEscape(cfgSSID) + "'>";
+  html += "<label>Senha WiFi</label><input type='password' name='pass' value='" + htmlEscape(cfgPASS) + "'>";
+  html += "<label>Servidor MQTT (IP)</label><input type='text' name='mqttsrv' value='" + htmlEscape(cfgMqttServer) + "'>";
+  html += "<label>Porta MQTT</label><input type='number' name='mqttport' value='" + String(cfgMqttPort) + "'>";
+  html += "<label>Usuario MQTT (opcional)</label><input type='text' name='mqttuser' value='" + htmlEscape(cfgMqttUser) + "'>";
+  html += "<label>Senha MQTT (opcional)</label><input type='password' name='mqttpass' value='" + htmlEscape(cfgMqttPass) + "'>";
+  html += "<label>Topico base MQTT</label><input type='text' name='basetopic' value='" + htmlEscape(cfgBaseTopic) + "'>";
+  html += "<label>Mensagem Botao 1 (NexulTech)</label><input type='text' name='msg1' value='" + htmlEscape(cfgMsgButton1) + "'>";
+  html += "<label>Mensagem Botao 2 (NexulTech)</label><input type='text' name='msg2' value='" + htmlEscape(cfgMsgButton2) + "'>";
+  html += "<button type='submit'>Salvar e Reiniciar</button>";
+  html += "</form></div>";
+
+  html += "<script>setTimeout(function(){location.reload();}, 15000);</script>";
+  html += "</body></html>";
+
+  server.send(200, "text/html", html);
+}
+
+void handleSave() {
+  if (server.hasArg("ssid"))      cfgSSID       = server.arg("ssid");
+  if (server.hasArg("pass"))      cfgPASS       = server.arg("pass");
+  if (server.hasArg("mqttsrv"))   cfgMqttServer = server.arg("mqttsrv");
+  if (server.hasArg("mqttport"))  cfgMqttPort   = server.arg("mqttport").toInt();
+  if (server.hasArg("mqttuser"))  cfgMqttUser   = server.arg("mqttuser");
+  if (server.hasArg("mqttpass"))  cfgMqttPass   = server.arg("mqttpass");
+  if (server.hasArg("basetopic")) cfgBaseTopic  = server.arg("basetopic");
+  if (server.hasArg("msg1"))      cfgMsgButton1 = server.arg("msg1");
+  if (server.hasArg("msg2"))      cfgMsgButton2 = server.arg("msg2");
+
+  saveConfig();
+
+  String html = "<html><head><meta charset='UTF-8'></head><body>";
+  html += "<h3>Configuracoes salvas! Reiniciando em alguns segundos...</h3>";
+  html += "<script>setTimeout(function(){window.location='/';}, 5000);</script>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+
+  delay(1500);
+  ESP.restart();
+}
+
+void handleRelay() {
+  if (server.hasArg("r") && server.hasArg("s")) {
+    int r = server.arg("r").toInt();
+    int s = server.arg("s").toInt();
+
+    if (r == 1) {
+      relay1State = (s == 1);
+      digitalWrite(RELAY1_PIN, relay1State ? HIGH : LOW);
+      publishMessage(cfgBaseTopic + "/rele1/estado", relay1State ? "ON" : "OFF");
+    } else if (r == 2) {
+      relay2State = (s == 1);
+      digitalWrite(RELAY2_PIN, relay2State ? HIGH : LOW);
+      publishMessage(cfgBaseTopic + "/rele2/estado", relay2State ? "ON" : "OFF");
+    }
+  }
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleStatus() {
+  String json = "{";
+  json += "\"wifi\":\"" + String(apMode ? "AP" : "STA") + "\",";
+  json += "\"mqtt\":" + String(mqttClient.connected() ? "true" : "false") + ",";
+  json += "\"battery_percent\":" + String(lastBatteryPercent, 1) + ",";
+  json += "\"battery_voltage\":" + String(lastBatteryVoltage, 2) + ",";
+  json += "\"relay1\":" + String(relay1State ? "true" : "false") + ",";
+  json += "\"relay2\":" + String(relay2State ? "true" : "false");
+  json += "}";
+  server.send(200, "application/json", json);
+}
