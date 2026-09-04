@@ -1,0 +1,1531 @@
+[
+  {
+    "id": "218601acc6734eaa",
+    "type": "tab",
+    "label": "Painel de Leitos (POC)",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "fcfacf1932da4c2a",
+    "type": "mqtt-broker",
+    "name": "Broker NexulTech Leitos",
+    "broker": "iot.nexultech.com.br",
+    "port": "2883",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  },
+  {
+    "id": "ae776b8613294e71",
+    "type": "ui-base",
+    "name": "Nexul Tech",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "dashboard",
+    "navigationStyle": "fixed",
+    "titleBarStyle": "fixed",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 1,
+    "showDisconnectNotification": true,
+    "allowInstall": true
+  },
+  {
+    "id": "b80712a3b8754340",
+    "type": "ui-theme",
+    "name": "Nexultech",
+    "colors": {
+      "surface": "#00364a",
+      "primary": "#0094ce",
+      "bgPage": "#00364a",
+      "groupBg": "#ffffff",
+      "groupOutline": "#cccccc"
+    },
+    "sizes": {
+      "density": "default",
+      "pagePadding": "12px",
+      "groupGap": "12px",
+      "groupBorderRadius": "4px",
+      "widgetGap": "12px"
+    }
+  },
+  {
+    "id": "9657d7be37854141",
+    "type": "ui-page",
+    "name": "PAINEL DE LEITOS",
+    "ui": "ae776b8613294e71",
+    "path": "/painel-leitos",
+    "icon": "home",
+    "layout": "grid",
+    "theme": "b80712a3b8754340",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": "0",
+        "cols": "1"
+      },
+      {
+        "name": "Tablet",
+        "px": "576",
+        "cols": "2"
+      },
+      {
+        "name": "Small Desktop",
+        "px": "768",
+        "cols": "3"
+      },
+      {
+        "name": "Desktop",
+        "px": "1024",
+        "cols": "3"
+      }
+    ],
+    "order": 1,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "d56482f58a2c4831",
+    "type": "ui-group",
+    "name": "Status dos Leitos",
+    "page": "9657d7be37854141",
+    "width": 6,
+    "height": 1,
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "59032c8d36c945be",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Estado Leito 01",
+    "topic": "Leito1/estado",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 60,
+    "wires": [
+      [
+        "3732b3e4cf1d4f52"
+      ]
+    ]
+  },
+  {
+    "id": "3732b3e4cf1d4f52",
+    "z": "218601acc6734eaa",
+    "type": "change",
+    "name": "Mapear cor",
+    "rules": [
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Livre",
+        "fromt": "str",
+        "to": "Livre",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Chamando",
+        "fromt": "str",
+        "to": "Chamando",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Atendendo",
+        "fromt": "str",
+        "to": "Atendendo",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 320,
+    "y": 60,
+    "wires": [
+      [
+        "15b5d852cb1548b9"
+      ]
+    ]
+  },
+  {
+    "id": "15b5d852cb1548b9",
+    "z": "218601acc6734eaa",
+    "type": "ui-led",
+    "name": "LED Leito 01",
+    "group": "d56482f58a2c4831",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "label": "Leito 01",
+    "labelPlacement": "left",
+    "labelAlignment": "left",
+    "states": [
+      {
+        "value": "Livre",
+        "valueType": "str",
+        "color": "#9e9e9e"
+      },
+      {
+        "value": "Chamando",
+        "valueType": "str",
+        "color": "#ff0000"
+      },
+      {
+        "value": "Atendendo",
+        "valueType": "str",
+        "color": "#00c853"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": true,
+    "showGlow": true,
+    "x": 520,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "d292582819a64aeb",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Tempo Leito 01",
+    "topic": "Leito1/tempo",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 120,
+    "wires": [
+      [
+        "8899192abc0e4c12"
+      ]
+    ]
+  },
+  {
+    "id": "8899192abc0e4c12",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Formatar tempo",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nvar seg = (p && p.tempo_segundos !== undefined) ? p.tempo_segundos : null;\nvar nome = (p && p.leito) ? p.leito : msg.topic;\nif (seg === null) { msg.payload = { texto: 'Aguardando...' }; return msg; }\nvar m = Math.floor(seg / 60);\nvar s = seg % 60;\nvar fmt = (m > 0 ? m + 'min ' : '') + s + 's';\nmsg.payload = { nome: nome, tempo_formatado: fmt, hora: new Date().toLocaleTimeString('pt-BR') };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 120,
+    "wires": [
+      [
+        "d84098665eb84098"
+      ]
+    ]
+  },
+  {
+    "id": "d84098665eb84098",
+    "z": "218601acc6734eaa",
+    "type": "ui-template",
+    "group": "d56482f58a2c4831",
+    "page": "",
+    "ui": "",
+    "name": "Ultimo Tempo Leito 01",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": "<div style=\"padding:6px 4px;\"><div style=\"font-size:12px;color:#888;\">Ultimo atendimento</div><div style=\"font-size:18px;font-weight:bold;\">{{msg.payload.tempo_formatado}}</div><div style=\"font-size:11px;color:#aaa;\">as {{msg.payload.hora}}</div></div>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 700,
+    "y": 120,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f46a675d61d1463c",
+    "z": "218601acc6734eaa",
+    "type": "ui-button",
+    "name": "Chamar Leito 01",
+    "group": "d56482f58a2c4831",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "label": "Chamar Leito 01",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "className": "",
+    "icon": "",
+    "payload": "1",
+    "payloadType": "str",
+    "topic": "Leito1/chamar",
+    "topicType": "str",
+    "x": 120,
+    "y": 180,
+    "wires": [
+      [
+        "c26b3fe302224b10"
+      ]
+    ]
+  },
+  {
+    "id": "c26b3fe302224b10",
+    "z": "218601acc6734eaa",
+    "type": "mqtt out",
+    "name": "Chamar Leito 01 (MQTT)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "fcfacf1932da4c2a",
+    "x": 320,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "4ff5ea5caaaa47bb",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Estado Leito 02",
+    "topic": "Leito2/estado",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 280,
+    "wires": [
+      [
+        "a5fa567e5b13493a"
+      ]
+    ]
+  },
+  {
+    "id": "a5fa567e5b13493a",
+    "z": "218601acc6734eaa",
+    "type": "change",
+    "name": "Mapear cor",
+    "rules": [
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Livre",
+        "fromt": "str",
+        "to": "Livre",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Chamando",
+        "fromt": "str",
+        "to": "Chamando",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Atendendo",
+        "fromt": "str",
+        "to": "Atendendo",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 320,
+    "y": 280,
+    "wires": [
+      [
+        "383200a2bb3d4365"
+      ]
+    ]
+  },
+  {
+    "id": "383200a2bb3d4365",
+    "z": "218601acc6734eaa",
+    "type": "ui-led",
+    "name": "LED Leito 02",
+    "group": "d56482f58a2c4831",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "label": "Leito 02",
+    "labelPlacement": "left",
+    "labelAlignment": "left",
+    "states": [
+      {
+        "value": "Livre",
+        "valueType": "str",
+        "color": "#9e9e9e"
+      },
+      {
+        "value": "Chamando",
+        "valueType": "str",
+        "color": "#ff0000"
+      },
+      {
+        "value": "Atendendo",
+        "valueType": "str",
+        "color": "#00c853"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": true,
+    "showGlow": true,
+    "x": 520,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "ec86ce1e128f4de8",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Tempo Leito 02",
+    "topic": "Leito2/tempo",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 340,
+    "wires": [
+      [
+        "ec581af4e4db43bd"
+      ]
+    ]
+  },
+  {
+    "id": "ec581af4e4db43bd",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Formatar tempo",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nvar seg = (p && p.tempo_segundos !== undefined) ? p.tempo_segundos : null;\nvar nome = (p && p.leito) ? p.leito : msg.topic;\nif (seg === null) { msg.payload = { texto: 'Aguardando...' }; return msg; }\nvar m = Math.floor(seg / 60);\nvar s = seg % 60;\nvar fmt = (m > 0 ? m + 'min ' : '') + s + 's';\nmsg.payload = { nome: nome, tempo_formatado: fmt, hora: new Date().toLocaleTimeString('pt-BR') };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 340,
+    "wires": [
+      [
+        "c8aef17aa7814006"
+      ]
+    ]
+  },
+  {
+    "id": "c8aef17aa7814006",
+    "z": "218601acc6734eaa",
+    "type": "ui-template",
+    "group": "d56482f58a2c4831",
+    "page": "",
+    "ui": "",
+    "name": "Ultimo Tempo Leito 02",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": "<div style=\"padding:6px 4px;\"><div style=\"font-size:12px;color:#888;\">Ultimo atendimento</div><div style=\"font-size:18px;font-weight:bold;\">{{msg.payload.tempo_formatado}}</div><div style=\"font-size:11px;color:#aaa;\">as {{msg.payload.hora}}</div></div>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 700,
+    "y": 340,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "13aaef07a1c34fad",
+    "z": "218601acc6734eaa",
+    "type": "ui-button",
+    "name": "Chamar Leito 02",
+    "group": "d56482f58a2c4831",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "label": "Chamar Leito 02",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "className": "",
+    "icon": "",
+    "payload": "1",
+    "payloadType": "str",
+    "topic": "Leito2/chamar",
+    "topicType": "str",
+    "x": 120,
+    "y": 400,
+    "wires": [
+      [
+        "4d25f32043ce4b9d"
+      ]
+    ]
+  },
+  {
+    "id": "4d25f32043ce4b9d",
+    "z": "218601acc6734eaa",
+    "type": "mqtt out",
+    "name": "Chamar Leito 02 (MQTT)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "fcfacf1932da4c2a",
+    "x": 320,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "6358f3fddee343d2",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Estado Leito 03",
+    "topic": "Leito3/estado",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 500,
+    "wires": [
+      [
+        "4d7b0cfe5eaa400b"
+      ]
+    ]
+  },
+  {
+    "id": "4d7b0cfe5eaa400b",
+    "z": "218601acc6734eaa",
+    "type": "change",
+    "name": "Mapear cor",
+    "rules": [
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Livre",
+        "fromt": "str",
+        "to": "Livre",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Chamando",
+        "fromt": "str",
+        "to": "Chamando",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Atendendo",
+        "fromt": "str",
+        "to": "Atendendo",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 320,
+    "y": 500,
+    "wires": [
+      [
+        "b02c55e2bb6c4756"
+      ]
+    ]
+  },
+  {
+    "id": "b02c55e2bb6c4756",
+    "z": "218601acc6734eaa",
+    "type": "ui-led",
+    "name": "LED Leito 03",
+    "group": "d56482f58a2c4831",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "label": "Leito 03",
+    "labelPlacement": "left",
+    "labelAlignment": "left",
+    "states": [
+      {
+        "value": "Livre",
+        "valueType": "str",
+        "color": "#9e9e9e"
+      },
+      {
+        "value": "Chamando",
+        "valueType": "str",
+        "color": "#ff0000"
+      },
+      {
+        "value": "Atendendo",
+        "valueType": "str",
+        "color": "#00c853"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": true,
+    "showGlow": true,
+    "x": 520,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "fd8058134cd74719",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Tempo Leito 03",
+    "topic": "Leito3/tempo",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 560,
+    "wires": [
+      [
+        "18cd1731969c4b69"
+      ]
+    ]
+  },
+  {
+    "id": "18cd1731969c4b69",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Formatar tempo",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nvar seg = (p && p.tempo_segundos !== undefined) ? p.tempo_segundos : null;\nvar nome = (p && p.leito) ? p.leito : msg.topic;\nif (seg === null) { msg.payload = { texto: 'Aguardando...' }; return msg; }\nvar m = Math.floor(seg / 60);\nvar s = seg % 60;\nvar fmt = (m > 0 ? m + 'min ' : '') + s + 's';\nmsg.payload = { nome: nome, tempo_formatado: fmt, hora: new Date().toLocaleTimeString('pt-BR') };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 560,
+    "wires": [
+      [
+        "853a850e2c6a4572"
+      ]
+    ]
+  },
+  {
+    "id": "853a850e2c6a4572",
+    "z": "218601acc6734eaa",
+    "type": "ui-template",
+    "group": "d56482f58a2c4831",
+    "page": "",
+    "ui": "",
+    "name": "Ultimo Tempo Leito 03",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": "<div style=\"padding:6px 4px;\"><div style=\"font-size:12px;color:#888;\">Ultimo atendimento</div><div style=\"font-size:18px;font-weight:bold;\">{{msg.payload.tempo_formatado}}</div><div style=\"font-size:11px;color:#aaa;\">as {{msg.payload.hora}}</div></div>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 700,
+    "y": 560,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "57e1863b44544a9a",
+    "z": "218601acc6734eaa",
+    "type": "ui-button",
+    "name": "Chamar Leito 03",
+    "group": "d56482f58a2c4831",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "label": "Chamar Leito 03",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "className": "",
+    "icon": "",
+    "payload": "1",
+    "payloadType": "str",
+    "topic": "Leito3/chamar",
+    "topicType": "str",
+    "x": 120,
+    "y": 620,
+    "wires": [
+      [
+        "f2b0cf0008fb466d"
+      ]
+    ]
+  },
+  {
+    "id": "f2b0cf0008fb466d",
+    "z": "218601acc6734eaa",
+    "type": "mqtt out",
+    "name": "Chamar Leito 03 (MQTT)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "fcfacf1932da4c2a",
+    "x": 320,
+    "y": 620,
+    "wires": []
+  },
+  {
+    "id": "66c6ed613785400d",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Estado Leito 04",
+    "topic": "Leito4/estado",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 720,
+    "wires": [
+      [
+        "565110d64477455f"
+      ]
+    ]
+  },
+  {
+    "id": "565110d64477455f",
+    "z": "218601acc6734eaa",
+    "type": "change",
+    "name": "Mapear cor",
+    "rules": [
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Livre",
+        "fromt": "str",
+        "to": "Livre",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Chamando",
+        "fromt": "str",
+        "to": "Chamando",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Atendendo",
+        "fromt": "str",
+        "to": "Atendendo",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 320,
+    "y": 720,
+    "wires": [
+      [
+        "0515ba8a73b245ca"
+      ]
+    ]
+  },
+  {
+    "id": "0515ba8a73b245ca",
+    "z": "218601acc6734eaa",
+    "type": "ui-led",
+    "name": "LED Leito 04",
+    "group": "d56482f58a2c4831",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "label": "Leito 04",
+    "labelPlacement": "left",
+    "labelAlignment": "left",
+    "states": [
+      {
+        "value": "Livre",
+        "valueType": "str",
+        "color": "#9e9e9e"
+      },
+      {
+        "value": "Chamando",
+        "valueType": "str",
+        "color": "#ff0000"
+      },
+      {
+        "value": "Atendendo",
+        "valueType": "str",
+        "color": "#00c853"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": true,
+    "showGlow": true,
+    "x": 520,
+    "y": 720,
+    "wires": []
+  },
+  {
+    "id": "8b9bbd62e0b14bad",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Tempo Leito 04",
+    "topic": "Leito4/tempo",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 780,
+    "wires": [
+      [
+        "cc664c13959048fb"
+      ]
+    ]
+  },
+  {
+    "id": "cc664c13959048fb",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Formatar tempo",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nvar seg = (p && p.tempo_segundos !== undefined) ? p.tempo_segundos : null;\nvar nome = (p && p.leito) ? p.leito : msg.topic;\nif (seg === null) { msg.payload = { texto: 'Aguardando...' }; return msg; }\nvar m = Math.floor(seg / 60);\nvar s = seg % 60;\nvar fmt = (m > 0 ? m + 'min ' : '') + s + 's';\nmsg.payload = { nome: nome, tempo_formatado: fmt, hora: new Date().toLocaleTimeString('pt-BR') };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 780,
+    "wires": [
+      [
+        "cefad5ba61e84b68"
+      ]
+    ]
+  },
+  {
+    "id": "cefad5ba61e84b68",
+    "z": "218601acc6734eaa",
+    "type": "ui-template",
+    "group": "d56482f58a2c4831",
+    "page": "",
+    "ui": "",
+    "name": "Ultimo Tempo Leito 04",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": "<div style=\"padding:6px 4px;\"><div style=\"font-size:12px;color:#888;\">Ultimo atendimento</div><div style=\"font-size:18px;font-weight:bold;\">{{msg.payload.tempo_formatado}}</div><div style=\"font-size:11px;color:#aaa;\">as {{msg.payload.hora}}</div></div>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 700,
+    "y": 780,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "2f960cab84104e89",
+    "z": "218601acc6734eaa",
+    "type": "ui-button",
+    "name": "Chamar Leito 04",
+    "group": "d56482f58a2c4831",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "label": "Chamar Leito 04",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "className": "",
+    "icon": "",
+    "payload": "1",
+    "payloadType": "str",
+    "topic": "Leito4/chamar",
+    "topicType": "str",
+    "x": 120,
+    "y": 840,
+    "wires": [
+      [
+        "ee8e74c60d9e4a43"
+      ]
+    ]
+  },
+  {
+    "id": "ee8e74c60d9e4a43",
+    "z": "218601acc6734eaa",
+    "type": "mqtt out",
+    "name": "Chamar Leito 04 (MQTT)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "fcfacf1932da4c2a",
+    "x": 320,
+    "y": 840,
+    "wires": []
+  },
+  {
+    "id": "9bb74d8e2e9542dd",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Estado Leito 05",
+    "topic": "Leito5/estado",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 940,
+    "wires": [
+      [
+        "6bde0c21e2184f28"
+      ]
+    ]
+  },
+  {
+    "id": "6bde0c21e2184f28",
+    "z": "218601acc6734eaa",
+    "type": "change",
+    "name": "Mapear cor",
+    "rules": [
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Livre",
+        "fromt": "str",
+        "to": "Livre",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Chamando",
+        "fromt": "str",
+        "to": "Chamando",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Atendendo",
+        "fromt": "str",
+        "to": "Atendendo",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 320,
+    "y": 940,
+    "wires": [
+      [
+        "0f35f68963384dd9"
+      ]
+    ]
+  },
+  {
+    "id": "0f35f68963384dd9",
+    "z": "218601acc6734eaa",
+    "type": "ui-led",
+    "name": "LED Leito 05",
+    "group": "d56482f58a2c4831",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "label": "Leito 05",
+    "labelPlacement": "left",
+    "labelAlignment": "left",
+    "states": [
+      {
+        "value": "Livre",
+        "valueType": "str",
+        "color": "#9e9e9e"
+      },
+      {
+        "value": "Chamando",
+        "valueType": "str",
+        "color": "#ff0000"
+      },
+      {
+        "value": "Atendendo",
+        "valueType": "str",
+        "color": "#00c853"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": true,
+    "showGlow": true,
+    "x": 520,
+    "y": 940,
+    "wires": []
+  },
+  {
+    "id": "dd822092950b4563",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Tempo Leito 05",
+    "topic": "Leito5/tempo",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 1000,
+    "wires": [
+      [
+        "fd195b0ea75c4f19"
+      ]
+    ]
+  },
+  {
+    "id": "fd195b0ea75c4f19",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Formatar tempo",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nvar seg = (p && p.tempo_segundos !== undefined) ? p.tempo_segundos : null;\nvar nome = (p && p.leito) ? p.leito : msg.topic;\nif (seg === null) { msg.payload = { texto: 'Aguardando...' }; return msg; }\nvar m = Math.floor(seg / 60);\nvar s = seg % 60;\nvar fmt = (m > 0 ? m + 'min ' : '') + s + 's';\nmsg.payload = { nome: nome, tempo_formatado: fmt, hora: new Date().toLocaleTimeString('pt-BR') };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 1000,
+    "wires": [
+      [
+        "4d6659a9a8e24421"
+      ]
+    ]
+  },
+  {
+    "id": "4d6659a9a8e24421",
+    "z": "218601acc6734eaa",
+    "type": "ui-template",
+    "group": "d56482f58a2c4831",
+    "page": "",
+    "ui": "",
+    "name": "Ultimo Tempo Leito 05",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": "<div style=\"padding:6px 4px;\"><div style=\"font-size:12px;color:#888;\">Ultimo atendimento</div><div style=\"font-size:18px;font-weight:bold;\">{{msg.payload.tempo_formatado}}</div><div style=\"font-size:11px;color:#aaa;\">as {{msg.payload.hora}}</div></div>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 700,
+    "y": 1000,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "2564dea2d27d4804",
+    "z": "218601acc6734eaa",
+    "type": "ui-button",
+    "name": "Chamar Leito 05",
+    "group": "d56482f58a2c4831",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "label": "Chamar Leito 05",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "className": "",
+    "icon": "",
+    "payload": "1",
+    "payloadType": "str",
+    "topic": "Leito5/chamar",
+    "topicType": "str",
+    "x": 120,
+    "y": 1060,
+    "wires": [
+      [
+        "8c07a085445947bf"
+      ]
+    ]
+  },
+  {
+    "id": "8c07a085445947bf",
+    "z": "218601acc6734eaa",
+    "type": "mqtt out",
+    "name": "Chamar Leito 05 (MQTT)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "fcfacf1932da4c2a",
+    "x": 320,
+    "y": 1060,
+    "wires": []
+  },
+  {
+    "id": "34f894ffa47948fe",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Estado Leito 06",
+    "topic": "Leito6/estado",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 1160,
+    "wires": [
+      [
+        "bd77b0fdfb354a75"
+      ]
+    ]
+  },
+  {
+    "id": "bd77b0fdfb354a75",
+    "z": "218601acc6734eaa",
+    "type": "change",
+    "name": "Mapear cor",
+    "rules": [
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Livre",
+        "fromt": "str",
+        "to": "Livre",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Chamando",
+        "fromt": "str",
+        "to": "Chamando",
+        "tot": "str"
+      },
+      {
+        "t": "change",
+        "p": "payload",
+        "pt": "msg",
+        "from": "Atendendo",
+        "fromt": "str",
+        "to": "Atendendo",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 320,
+    "y": 1160,
+    "wires": [
+      [
+        "92a1d30a58e340aa"
+      ]
+    ]
+  },
+  {
+    "id": "92a1d30a58e340aa",
+    "z": "218601acc6734eaa",
+    "type": "ui-led",
+    "name": "LED Leito 06",
+    "group": "d56482f58a2c4831",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "label": "Leito 06",
+    "labelPlacement": "left",
+    "labelAlignment": "left",
+    "states": [
+      {
+        "value": "Livre",
+        "valueType": "str",
+        "color": "#9e9e9e"
+      },
+      {
+        "value": "Chamando",
+        "valueType": "str",
+        "color": "#ff0000"
+      },
+      {
+        "value": "Atendendo",
+        "valueType": "str",
+        "color": "#00c853"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": true,
+    "showGlow": true,
+    "x": 520,
+    "y": 1160,
+    "wires": []
+  },
+  {
+    "id": "54420a8dc8d14935",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Tempo Leito 06",
+    "topic": "Leito6/tempo",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 1220,
+    "wires": [
+      [
+        "26ebca25d16149e2"
+      ]
+    ]
+  },
+  {
+    "id": "26ebca25d16149e2",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Formatar tempo",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nvar seg = (p && p.tempo_segundos !== undefined) ? p.tempo_segundos : null;\nvar nome = (p && p.leito) ? p.leito : msg.topic;\nif (seg === null) { msg.payload = { texto: 'Aguardando...' }; return msg; }\nvar m = Math.floor(seg / 60);\nvar s = seg % 60;\nvar fmt = (m > 0 ? m + 'min ' : '') + s + 's';\nmsg.payload = { nome: nome, tempo_formatado: fmt, hora: new Date().toLocaleTimeString('pt-BR') };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 1220,
+    "wires": [
+      [
+        "1069fb9b46fa4384"
+      ]
+    ]
+  },
+  {
+    "id": "1069fb9b46fa4384",
+    "z": "218601acc6734eaa",
+    "type": "ui-template",
+    "group": "d56482f58a2c4831",
+    "page": "",
+    "ui": "",
+    "name": "Ultimo Tempo Leito 06",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": "<div style=\"padding:6px 4px;\"><div style=\"font-size:12px;color:#888;\">Ultimo atendimento</div><div style=\"font-size:18px;font-weight:bold;\">{{msg.payload.tempo_formatado}}</div><div style=\"font-size:11px;color:#aaa;\">as {{msg.payload.hora}}</div></div>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 700,
+    "y": 1220,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "ab133e29cfe34ed0",
+    "z": "218601acc6734eaa",
+    "type": "ui-button",
+    "name": "Chamar Leito 06",
+    "group": "d56482f58a2c4831",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "label": "Chamar Leito 06",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "className": "",
+    "icon": "",
+    "payload": "1",
+    "payloadType": "str",
+    "topic": "Leito6/chamar",
+    "topicType": "str",
+    "x": 120,
+    "y": 1280,
+    "wires": [
+      [
+        "7eb30ad6a0614123"
+      ]
+    ]
+  },
+  {
+    "id": "7eb30ad6a0614123",
+    "z": "218601acc6734eaa",
+    "type": "mqtt out",
+    "name": "Chamar Leito 06 (MQTT)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "fcfacf1932da4c2a",
+    "x": 320,
+    "y": 1280,
+    "wires": []
+  },
+  {
+    "id": "d8dffed259c24e31",
+    "type": "ui-group",
+    "name": "Bateria do Painel",
+    "page": "9657d7be37854141",
+    "width": 6,
+    "height": 1,
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "14786758ad644fc0",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Bateria Painel",
+    "topic": "hospital/painel_leitos01/bateria",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 1380,
+    "wires": [
+      [
+        "00ac81ed61f24de4"
+      ]
+    ]
+  },
+  {
+    "id": "00ac81ed61f24de4",
+    "z": "218601acc6734eaa",
+    "type": "function",
+    "name": "Extrair percent",
+    "func": "var p = msg.payload;\nif (typeof p === 'string') { try { p = JSON.parse(p); } catch(e) {} }\nmsg.payload = (p && p.percent !== undefined) ? p.percent : 0;\nmsg.voltage = (p && p.voltage !== undefined) ? p.voltage : 0;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 1380,
+    "wires": [
+      [
+        "27a4af14b08647a7"
+      ]
+    ]
+  },
+  {
+    "id": "27a4af14b08647a7",
+    "z": "218601acc6734eaa",
+    "type": "ui-gauge",
+    "name": "Gauge Bateria",
+    "group": "d8dffed259c24e31",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "gtype": "gage",
+    "title": "Bateria do Painel",
+    "label": "%",
+    "format": "{{value}}",
+    "min": "0",
+    "max": "100",
+    "colors": [
+      "#ff0000",
+      "#e6e600",
+      "#00b500"
+    ],
+    "seg1": "20",
+    "seg2": "50",
+    "diff": false,
+    "className": "",
+    "x": 520,
+    "y": 1380,
+    "wires": []
+  },
+  {
+    "id": "ca4ff6be3610459c",
+    "z": "218601acc6734eaa",
+    "type": "mqtt in",
+    "name": "Alerta Bateria 80%",
+    "topic": "hospital/painel_leitos01/bateria/alerta",
+    "qos": "0",
+    "datatype": "auto-detect",
+    "broker": "fcfacf1932da4c2a",
+    "nl": false,
+    "rap": true,
+    "inputs": 0,
+    "x": 120,
+    "y": 1440,
+    "wires": [
+      [
+        "88af1ad6373c4d57"
+      ]
+    ]
+  },
+  {
+    "id": "88af1ad6373c4d57",
+    "z": "218601acc6734eaa",
+    "type": "ui-text",
+    "group": "d8dffed259c24e31",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "name": "Texto Alerta Bateria",
+    "label": "Alerta",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": "",
+    "color": "#c0392b",
+    "wrapText": true,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 700,
+    "y": 1440,
+    "wires": []
+  }
+]
