@@ -1,0 +1,52 @@
+# ============================================================================
+# Opcoes minimas do ESP-IDF para permitir NAT (roteamento) entre a interface
+# AP (NexulTech) e a interface STA (rede do hospital/shopping/hotel).
+# Sem isso, ip_napt_enable() nao tem efeito real -- os pacotes sao
+# descartados mesmo que a chamada nao trave o firmware.
+# ============================================================================
+
+# Necessario p/ o firmware iniciar automaticamente o "app_main" do Arduino
+# quando se usa framework = espidf, arduino
+CONFIG_AUTOSTART_ARDUINO=y
+
+# O framework Arduino exige que o FreeRTOS rode a 1000Hz; o padrao do
+# ESP-IDF puro e 100Hz. Sem isso o build para com o erro:
+# "esp32-arduino requires CONFIG_FREERTOS_HZ=1000 (currently 100)"
+CONFIG_FREERTOS_HZ=1000
+
+# Tamanho da flash. Sua WROOM-32 "DevKit" e 4MB (confirmado pelo log de
+# compilacao: "HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash"). Se algum dia
+# usar outra WROOM-32 com flash diferente, ajuste aqui.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# Permite que o lwIP encaminhe pacotes entre interfaces de rede (pre-requisito
+# do NAT; sem isso o NAPT nao tem efeito mesmo se habilitado abaixo)
+CONFIG_LWIP_IP_FORWARD=y
+
+# Habilita o NAPT (Network Address & Port Translation) propriamente dito
+CONFIG_LWIP_IPV4_NAPT=y
+
+# Tabela de portas/conexoes do NAPT (padrao costuma ser baixo; aumentamos
+# um pouco para aguentar o navegador do celular abrindo varias conexoes
+# simultaneas durante o login do Captive Portal)
+CONFIG_LWIP_IPV4_NAPT_PORTMAP=y
+CONFIG_LWIP_TCPIP_TASK_STACK_SIZE=4096
+
+# ----------------------------------------------------------------------------
+# Tamanhos de pilha (stack). O Arduino IDE configura esses valores por
+# padrao; como estamos compilando via ESP-IDF puro (com sdkconfig proprio,
+# nao o do Arduino IDE), eles podem estar caindo no padrao "cru" do
+# ESP-IDF, que e menor. Um estouro de pilha (stack overflow) pode causar
+# reset sem NENHUM aviso de panic/watchdog -- foi exatamente esse o
+# sintoma reportado (reboot silencioso, mesmo sozinho em modo AP).
+# ----------------------------------------------------------------------------
+CONFIG_ARDUINO_LOOP_STACK_SIZE=8192
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# Habilita deteccao de estouro de pilha (canario + checagem em cada troca
+# de contexto). Se AINDA houver um estouro de pilha apos aumentar os
+# tamanhos acima, isso faz o sistema IMPRIMIR qual tarefa estourou antes
+# de reiniciar, em vez de reiniciar silenciosamente.
+CONFIG_FREERTOS_CHECK_STACKOVERFLOW_CANARY=y
+CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK=y
